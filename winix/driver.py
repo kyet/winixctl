@@ -12,6 +12,7 @@ class WinixDeviceStub:
     alias: str
     location_code: str
     filter_replace_date: str
+    product_group: str
 
 
 class WinixAccount:
@@ -48,6 +49,7 @@ class WinixAccount:
                 "uuid": self.get_uuid(),
             },
         )
+        print(resp.json())
 
         if resp.status_code != 200:
             raise Exception(
@@ -61,6 +63,7 @@ class WinixAccount:
                 alias=d["deviceAlias"],
                 location_code=d["deviceLocCode"],
                 filter_replace_date=d["filterReplaceDate"],
+                product_group=d["productGroup"],
             )
             for d in resp.json()["deviceInfoList"]
         ]
@@ -109,13 +112,47 @@ class WinixAccount:
 class WinixDevice:
     CTRL_URL = "https://us.api.winix-iot.com/common/control/devices/{deviceid}/A211/{attribute}:{value}"
     STATE_URL = "https://us.api.winix-iot.com/common/event/sttus/devices/{deviceid}"
+    category_keys = None
+    state_keys = None
 
+    def __init__(self, id):
+        self.id = id
+
+    def control(self, category: str, state: str):
+        url = self.CTRL_URL.format(
+            deviceid=self.id,
+            attribute=self.category_keys[category],
+            value=self.state_keys[category][state]
+        )
+        requests.get(url)
+
+    def get_state(self):
+        print(self.category_keys)
+        r = requests.get(self.STATE_URL.format(deviceid=self.id))
+        payload = r.json()["body"]["data"][0]["attributes"]
+        print(payload)
+
+        output = dict()
+        for (payload_key, attribute) in payload.items():
+            for (category, local_key) in self.category_keys.items():
+                if payload_key == local_key:
+                    if category in self.state_keys.keys():
+                        for (value_key, value) in self.state_keys[category].items():
+                            if attribute == value:
+                                output[category] = value_key
+                    else:
+                        output[category] = int(attribute)
+
+        return output
+
+
+class AirPurifierDevice(WinixDevice):
     category_keys = {
         "power": "A02",
         "mode": "A03",
         "airflow": "A04",
         "aqi": "A05",
-        "plasma": "A07",
+        "plasmawave": "A07",
         "filter_hour": "A21",
         "air_quality": "S07",
         "air_qvalue": "S08",
@@ -132,72 +169,48 @@ class WinixDevice:
             "turbo": "05",
             "sleep": "06",
         },
-        "plasma": {"off": "0", "on": "1"},
+        "plasmawave": {"off": "0", "on": "1"},
         "air_quality": {"good": "01", "fair": "02", "poor": "03"},
     }
 
-    def __init__(self, id):
-        self.id = id
 
-    def off(self):
-        self._rpc_attr(self.category_keys["power"], self.state_keys["power"]["off"])
+class DehumidifierDevice(WinixDevice):
+    category_keys = {
+        "power": "D02",
+        "mode": "D03",
+        "airflow": "D04",
+        "target_humidity": "D05",
+        "child_lock": "D08",
+        "current_humidity": "D10",
+        "water_bucket": "D11",
+        "uv_sanitize": "D13",
+        "timer": "D15",
+    }
 
-    def on(self):
-        self._rpc_attr(self.category_keys["power"], self.state_keys["power"]["on"])
+    state_keys = {
+        "power": {
+            "off": "0",
+            "on": "1",
+            "off-dry": "2"
+        },
+        "mode": {
+            "auto": "01",
+            "manual": "02",
+            "clothes": "03",
+            "shoes": "04",
+            "quiet": "05",
+            "continuous": "06"
+        },
+        "airflow": {
+            "high": "01",
+            "low": "02",
+            "turbo": "03",
+        },
+        "child_lock": {"disabled": "0", "enabled": "1"},
+        "water_bucket": {"not full": "0", "full or detached": "1"},
+        "uv_sanitize": {"disabled": "0", "enabled": "1"},
+    }
 
-    def auto(self):
-        self._rpc_attr(self.category_keys["mode"], self.state_keys["mode"]["auto"])
 
-    def manual(self):
-        self._rpc_attr(self.category_keys["mode"], self.state_keys["mode"]["manual"])
-
-    def plasmawave_off(self):
-        self._rpc_attr(self.category_keys["plasma"], self.state_keys["plasma"]["off"])
-
-    def plasmawave_on(self):
-        self._rpc_attr(self.category_keys["plasma"], self.state_keys["plasma"]["on"])
-
-    def low(self):
-        self._rpc_attr(self.category_keys["airflow"], self.state_keys["airflow"]["low"])
-
-    def medium(self):
-        self._rpc_attr(
-            self.category_keys["airflow"], self.state_keys["airflow"]["medium"]
-        )
-
-    def high(self):
-        self._rpc_attr(
-            self.category_keys["airflow"], self.state_keys["airflow"]["high"]
-        )
-
-    def turbo(self):
-        self._rpc_attr(
-            self.category_keys["airflow"], self.state_keys["airflow"]["turbo"]
-        )
-
-    def sleep(self):
-        self._rpc_attr(
-            self.category_keys["airflow"], self.state_keys["airflow"]["sleep"]
-        )
-
-    def _rpc_attr(self, attr: str, value: str):
-        requests.get(
-            self.CTRL_URL.format(deviceid=self.id, attribute=attr, value=value)
-        )
-
-    def get_state(self):
-        r = requests.get(self.STATE_URL.format(deviceid=self.id))
-        payload = r.json()["body"]["data"][0]["attributes"]
-
-        output = dict()
-        for (payload_key, attribute) in payload.items():
-            for (category, local_key) in self.category_keys.items():
-                if payload_key == local_key:
-                    if category in self.state_keys.keys():
-                        for (value_key, value) in self.state_keys[category].items():
-                            if attribute == value:
-                                output[category] = value_key
-                    else:
-                        output[category] = int(attribute)
-
-        return output
+class AirconditionerDevice(WinixDevice):
+    pass # TBD

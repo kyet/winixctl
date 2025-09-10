@@ -1,10 +1,28 @@
 # Winix Controller
 
-This is a Python library for controlling Winix C545 Air Purifier
-devices. I reverse-engineered the API calls from the Android app. There
-are a few weird idiosyncrasies with the Winix backends.
+This is a Python library for controlling Winix devices I reverse-engineered the
+API calls from the Android app. There are a few weird idiosyncrasies with the
+Winix backends.
 
 Included in this package is a CLI program `winixctl`.
+
+## Supported Devices
+
+In addition to the confirmed models listed below, basic functions are expected
+to work on other devices as well. If the program does not support your device
+properly, please let us know.
+
+### Air Purifier
+
+- C545
+
+### Dehumidifier
+
+- DXWE210-***
+
+### Airconditioner
+
+TBD
 
 ## Setup
 
@@ -18,7 +36,7 @@ as the `winixctl` command for shell (which uses the library).
 $ winixctl
 usage: winixctl [-h] [--device DEVICE_SELECTOR] {login,refresh,devices,getstate,fan,power,mode,plasmawave} ...
 
-Winix C545 Air Purifier Control
+Winix Device ontrol
 
 positional arguments:
   {login,refresh,devices,getstate,fan,power,mode,plasmawave}

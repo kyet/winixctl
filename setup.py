@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.3.0",
     author="Hunter Fernandes",
     author_email="hunter@hfernandes.com",
-    description="Programmatically control the Winix C545",
+    description="Programmatically control the Winix",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/hfern/winix",
