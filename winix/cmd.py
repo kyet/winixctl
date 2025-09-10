@@ -366,7 +366,12 @@ class StateCmd(Cmd):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Winix C545 Air Purifier Control")
+    parser = argparse.ArgumentParser(
+        description="Winix Device Control\n"
+                    "[AIR]: Air Purifier\n"
+                    "[DEH]: Dehumidifier\n",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
     parser.add_argument(
         "--device",
         "-D",
