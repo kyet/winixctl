@@ -7,7 +7,12 @@ from getpass import getpass
 from os import path, makedirs
 from typing import Optional, List
 
-from winix import WinixAccount, WinixDevice, WinixDeviceStub
+from winix import (
+    WinixAccount,
+    WinixDevice,
+    AirPurifierDevice,
+    WinixDeviceStub
+)
 from winix.auth import WinixAuthResponse, login, refresh
 
 DEFAULT_CONFIG_PATH = "~/.config/winix/config.json"
@@ -83,8 +88,12 @@ class Cmd:
         self.args = args
         self.config = config
 
-    def active_device_id(self) -> str:
-        return self.config.device(self.args.device_selector).id
+    def get_device_cls(self):
+        device_config = self.config.device(self.args.device_selector)
+        device_id = device_config.id
+        device_type = device_config.product_group
+
+        return AirPurifierDevice(device_id)
 
 
 class LoginCmd(Cmd):
@@ -180,7 +189,7 @@ class DevicesCmd(Cmd):
 class FanCmd(Cmd):
     parser_args = {
         "name": "fan",
-        "help": "Fan speed controls",
+        "help": "Fan speed (airflow) controls",
     }
 
     @classmethod
@@ -192,10 +201,8 @@ class FanCmd(Cmd):
         )
 
     def execute(self):
-        level = self.args.level
         # TODO(Hunter): Support getting the fan state instead of only being able to set it
-        device = WinixDevice(self.active_device_id())
-        getattr(device, level)()
+        self.get_device_cls().control("airflow", self.args.level)
         print("ok")
 
 
@@ -210,9 +217,7 @@ class PowerCmd(Cmd):
         parser.add_argument("state", help="Power state", choices=["on", "off"])
 
     def execute(self):
-        state = self.args.state
-        device = WinixDevice(self.active_device_id())
-        getattr(device, state)()
+        self.get_device_cls().control(self.parser_args["name"], self.args.state)
         print("ok")
 
 
@@ -227,9 +232,7 @@ class ModeCmd(Cmd):
         parser.add_argument("state", help="Mode state", choices=["auto", "manual"])
 
     def execute(self):
-        state = self.args.state
-        device = WinixDevice(self.active_device_id())
-        getattr(device, state)()
+        self.get_device_cls().control(self.parser_args["name"], self.args.state)
         print("ok")
 
 
@@ -244,9 +247,7 @@ class PlasmawaveCmd(Cmd):
         parser.add_argument("state", help="Plasmawave state", choices=["on", "off"])
 
     def execute(self):
-        state = "plasmawave_on" if self.args.state == "on" else "plasmawave_off"
-        device = WinixDevice(self.active_device_id())
-        getattr(device, state)()
+        self.get_device_cls().control("plasma", self.args.state)
         print("ok")
 
 
@@ -278,9 +279,7 @@ class StateCmd(Cmd):
         pass
 
     def execute(self):
-        device = WinixDevice(self.active_device_id())
-        state = "get_state"
-        status = getattr(device, state)()
+        status = self.get_device_cls().get_state()
         for f, v in status.items():
             print(f"{f:>15} : {v}")
 
