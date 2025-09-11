@@ -150,6 +150,8 @@ class AirPurifierDevice(WinixDevice):
         "airflow": "A04",
         "aqi": "A05",
         "plasma": "A07",
+        "child_lock": "A08",
+        "brightness_level": "A16",
         "filter_hour": "A21",
         "air_quality": "S07",
         "air_qvalue": "S08",
@@ -166,6 +168,7 @@ class AirPurifierDevice(WinixDevice):
             "turbo": "05",
             "sleep": "06",
         },
+        "child_lock": {"off": "0", "on": "1"},
         "plasma": {"off": "0", "on": "1"},
         "air_quality": {"good": "01", "fair": "02", "poor": "03"},
     }

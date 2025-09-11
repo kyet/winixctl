@@ -289,7 +289,7 @@ class HumidityCmd(Cmd):
 class ChildLockCmd(Cmd):
     parser_args = {
         "name": "child-lock",
-        "help": "Child lock controls [DEH]",
+        "help": "Child lock controls [AIR, DEH]",
     }
 
     @classmethod
@@ -365,6 +365,22 @@ class StateCmd(Cmd):
             print(f"{f:>16} : {v}")
 
 
+class BrightnessLevelCmd(Cmd):
+    parser_args = {
+        "name": "brightness",
+        "help": "Brightness level controls [AIR]",
+    }
+
+    @classmethod
+    def add_parser(cls, parser):
+        parser.add_argument("level", help="Brigness level",
+                            type=int)
+
+    def execute(self):
+        self.get_device_cls().control("brightness_level", str(self.args.level))
+        print("ok")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Winix Device Control\n"
@@ -396,6 +412,7 @@ def main():
             ChildLockCmd,
             UVSanitizeCmd,
             TimerCmd,
+            BrightnessLevelCmd,
         )
     }
 
