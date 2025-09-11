@@ -11,6 +11,8 @@ from winix import (
     WinixAccount,
     WinixDevice,
     AirPurifierDevice,
+    DehumidifierDevice,
+    AirConditionerDevice,
     WinixDeviceStub
 )
 from winix.auth import WinixAuthResponse, login, refresh
@@ -93,7 +95,13 @@ class Cmd:
         device_id = device_config.id
         device_type = device_config.product_group
 
-        return AirPurifierDevice(device_id)
+        if "Air" in device_type:
+            return AirPurifierDevice(device_id)
+        elif "Deh" in device_type:
+            return DehumidifierDevice(device_id)
+
+        # TODO: check device_type name
+        return AirConditionerDevice(device_id)
 
 
 class LoginCmd(Cmd):
@@ -189,7 +197,7 @@ class DevicesCmd(Cmd):
 class FanCmd(Cmd):
     parser_args = {
         "name": "fan",
-        "help": "Fan speed (airflow) controls",
+        "help": "Fan speed (airflow) controls [AIR, DEH]",
     }
 
     @classmethod
@@ -209,7 +217,7 @@ class FanCmd(Cmd):
 class PowerCmd(Cmd):
     parser_args = {
         "name": "power",
-        "help": "Power controls",
+        "help": "Power controls [AIR, DEH]",
     }
 
     @classmethod
@@ -224,12 +232,23 @@ class PowerCmd(Cmd):
 class ModeCmd(Cmd):
     parser_args = {
         "name": "mode",
-        "help": "Mode controls",
+        "help": "Mode controls [AIR, DEH]",
     }
 
     @classmethod
     def add_parser(cls, parser):
-        parser.add_argument("state", help="Mode state", choices=["auto", "manual"])
+        parser.add_argument(
+            "state",
+            help="Mode state",
+            choices=[
+                "auto",
+                "manual",
+                "clothes",
+                "shoes",
+                "quiet",
+                "continuous"
+            ]
+        )
 
     def execute(self):
         self.get_device_cls().control(self.parser_args["name"], self.args.state)
@@ -239,7 +258,7 @@ class ModeCmd(Cmd):
 class PlasmawaveCmd(Cmd):
     parser_args = {
         "name": "plasmawave",
-        "help": "Plasmawave controls",
+        "help": "Plasmawave controls [AIR]",
     }
 
     @classmethod
@@ -248,6 +267,68 @@ class PlasmawaveCmd(Cmd):
 
     def execute(self):
         self.get_device_cls().control("plasma", self.args.state)
+        print("ok")
+
+
+class HumidityCmd(Cmd):
+    parser_args = {
+        "name": "humidity",
+        "help": "Target humidity controls [DEH]",
+    }
+
+    @classmethod
+    def add_parser(cls, parser):
+        parser.add_argument("percent", help="Target humidity in range 35~70%%",
+                            type=int)
+
+    def execute(self):
+        self.get_device_cls().control(self.parser_args["name"], str(self.args.percent))
+        print("ok")
+
+
+class ChildLockCmd(Cmd):
+    parser_args = {
+        "name": "child-lock",
+        "help": "Child lock controls [DEH]",
+    }
+
+    @classmethod
+    def add_parser(cls, parser):
+        parser.add_argument("state", help="Child lock state", choices=["on", "off"])
+
+    def execute(self):
+        self.get_device_cls().control("child_lock", self.args.state)
+        print("ok")
+
+
+class UVSanitizeCmd(Cmd):
+    parser_args = {
+        "name": "uv-sanitize",
+        "help": "UV sanitize controls [DEH]",
+    }
+
+    @classmethod
+    def add_parser(cls, parser):
+        parser.add_argument("state", help="UV sanitize state", choices=["on", "off"])
+
+    def execute(self):
+        self.get_device_cls().control("uv_sanitize", self.args.state)
+        print("ok")
+
+
+class TimerCmd(Cmd):
+    parser_args = {
+        "name": "timer",
+        "help": "timer controls [DEH]",
+    }
+
+    @classmethod
+    def add_parser(cls, parser):
+        parser.add_argument("hour", help="Set timer in range 1~12 hour",
+                            type=int)
+
+    def execute(self):
+        self.get_device_cls().control(self.parser_args["name"], str(self.args.hour))
         print("ok")
 
 
@@ -281,7 +362,7 @@ class StateCmd(Cmd):
     def execute(self):
         status = self.get_device_cls().get_state()
         for f, v in status.items():
-            print(f"{f:>15} : {v}")
+            print(f"{f:>16} : {v}")
 
 
 def main():
@@ -306,6 +387,10 @@ def main():
             PowerCmd,
             ModeCmd,
             PlasmawaveCmd,
+            HumidityCmd,
+            ChildLockCmd,
+            UVSanitizeCmd,
+            TimerCmd,
         )
     }
 

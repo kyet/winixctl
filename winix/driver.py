@@ -169,3 +169,45 @@ class AirPurifierDevice(WinixDevice):
         "plasma": {"off": "0", "on": "1"},
         "air_quality": {"good": "01", "fair": "02", "poor": "03"},
     }
+
+
+class DehumidifierDevice(WinixDevice):
+    category_keys = {
+        "power": "D02",
+        "mode": "D03",
+        "airflow": "D04",
+        "target_humidity": "D05",
+        "child_lock": "D08",
+        "current_humidity": "D10",
+        "water_bucket": "D11",
+        "uv_sanitize": "D13",
+        "timer": "D15",
+    }
+
+    state_keys = {
+        "power": {
+            "off": "0",
+            "on": "1",
+            "off-dry": "2"
+        },
+        "mode": {
+            "auto": "01",
+            "manual": "02",
+            "clothes": "03",
+            "shoes": "04",
+            "quiet": "05",
+            "continuous": "06"
+        },
+        "airflow": {
+            "high": "01",
+            "low": "02",
+            "turbo": "03",
+        },
+        "child_lock": {"disabled": "0", "enabled": "1"},
+        "water_bucket": {"not full": "0", "full or detached": "1"},
+        "uv_sanitize": {"disabled": "0", "enabled": "1"},
+    }
+
+
+class AirConditionerDevice(WinixDevice):
+    pass # TBD
