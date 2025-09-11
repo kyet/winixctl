@@ -323,7 +323,7 @@ def main():
 
     cls = commands[cmd]
     try:
-        cls(args, config=Configuration("~/.config/winix/config.json")).execute()
+        cls(args, config=Configuration(DEFAULT_CONFIG_PATH)).execute()
     except UserError as exc:
         print(str(exc), file=sys.stderr)
         sys.exit(1)
