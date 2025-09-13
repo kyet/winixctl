@@ -175,6 +175,8 @@ class AirPurifierDevice(WinixDevice):
 
 
 class DehumidifierDevice(WinixDevice):
+    HUMIDITY_URL = "https://monitor.winix-iot.com/mon/api/humidity/{environment}/{duration}/{unknown}/{deviceid}"
+
     category_keys = {
         "power": "D02",
         "mode": "D03",
@@ -210,6 +212,17 @@ class DehumidifierDevice(WinixDevice):
         "water_bucket": {"not full": "0", "full or detached": "1"},
         "uv_sanitize": {"disabled": "0", "enabled": "1"},
     }
+
+    def get_humidity_history(self, environment, duration):
+        url = self.HUMIDITY_URL.format(
+            environment=environment,
+            duration=duration,
+            unknown="0",
+            deviceid=self.id
+        )
+        stat = requests.get(url).json()["body"]["data"]
+
+        return stat
 
 
 class AirConditionerDevice(WinixDevice):

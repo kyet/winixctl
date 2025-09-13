@@ -381,6 +381,50 @@ class BrightnessLevelCmd(Cmd):
         print("ok")
 
 
+class HumidityHistoryCmd(Cmd):
+    parser_args = {
+        "name": "humidity-hist",
+        "help": "Humidity history [DEH]",
+    }
+    duration_map = {
+        "day": "D",
+        "week": "W",
+        "month": "M"
+    }
+
+    @classmethod
+    def add_parser(cls, parser):
+        parser.add_argument(
+            "--environment",
+            "-E",
+            help="Location where sensor data is collected (default: indoor)",
+            choices=["indoor", "outdoor"],
+            default="indoor"
+        )
+        parser.add_argument(
+            "--duration",
+            "-D",
+            help="Time range to query sensor data from the current time (default: day)",
+            choices=["day", "week", "month"],
+            default="day"
+        )
+
+    def execute(self):
+        history = self.get_device_cls().get_humidity_history(
+            self.args.environment,
+            self.duration_map[self.args.duration]
+        )
+
+        if self.args.duration == "day":
+            print(f"{'hour':<10} {'humidity'}")
+            for entry in history:
+                print(f"{entry['hour']:<10} {entry['humidity']}")
+        else:
+            print(f"{'date':<10} {'humidity'}")
+            for entry in history:
+                print(f"{entry['date']:<10} {entry['humidity']}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Winix Device Control\n"
@@ -413,6 +457,7 @@ def main():
             UVSanitizeCmd,
             TimerCmd,
             BrightnessLevelCmd,
+            HumidityHistoryCmd,
         )
     }
 
